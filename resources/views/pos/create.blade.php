@@ -7,8 +7,10 @@
 
 <div x-data="{
     cart: [],
+    selectedProductId: null,
     addToCart(id, name, price) {
         this.cart.push({ id, name, price });
+        this.selectedProductId = id;
     },
     /**
      * Remove an item from the cart array based on its unique ID.
@@ -24,7 +26,8 @@
 
     <div class="grid grid-cols-3 gap-4">
         @foreach ($products as $product)
-        <div class="border rounded-md p-3 cursor-pointer"
+        <div class="border rounded-md p-3 cursor-pointer transition"
+            :class="{ 'ring-2 ring-blue-500': selectedProductId === {{ $product->id }} }"
             @click="addToCart({{ $product->id }}, '{{ $product->name }}', {{ $product->price }})">
             <div class="flex items-start justify-between gap-2">
                 <p class="font-medium">{{ $product->name }}</p>
