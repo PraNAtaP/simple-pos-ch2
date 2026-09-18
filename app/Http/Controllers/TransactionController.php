@@ -1,6 +1,7 @@
 <?php
 
 namespace App\Http\Controllers;
+
 use App\Models\Product;
 
 
@@ -8,7 +9,7 @@ class TransactionController extends Controller
 {
     public function create()
     {
-        $products = Product::take(12)->get();
+        $products = Product::where('stock', '>', 0)->get();
         return view('pos.create', ['products' => $products]);
     }
 
