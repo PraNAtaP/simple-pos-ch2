@@ -8,11 +8,11 @@ use App\Models\Transaction;
 
 class TransactionController extends Controller
 {
-    public function create()
-    {
-        $products = Product::where('stock', '>', 0)->get();
-        return view('pos.create', ['products' => $products]);
-    }
+public function create()
+{
+    $products = Product::where('stock', '>', 0)->paginate(12);
+    return view('pos.create', ['products' => $products]);
+}
 
     public function store()
     {
