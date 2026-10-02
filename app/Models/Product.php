@@ -9,6 +9,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 
 class Product extends Model
 {
+    protected $fillable = ['category_id', 'name', 'price', 'stock'];
     public function category(): BelongsTo
     {
         return $this->belongsTo(Category::class);
@@ -18,7 +19,7 @@ class Product extends Model
     {
         return $this->hasMany(TransactionDetail::class);
     }
-}
+
     public function transactions(): BelongsToMany
     {
         return $this->belongsToMany(Transaction::class, 'transaction_details')
