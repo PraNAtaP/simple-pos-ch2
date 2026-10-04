@@ -17,6 +17,7 @@ Repositori ini digunakan untuk pengerjaan tugas kelompok mata kuliah Pemrograman
   
 
 * **Nety Sulistyorini:**
+Hal tersebut belum cukup untuk mencegah manipulasi total, semua itu disebabkan karena aturan numeric cuma memvalidasi bahwa total berbentuk angka, bukan bahwa angka itu benar. Sebab form berasal dari sisi klien, pengguna tetap bisa mengubah total melalui DevTools atau mengirim POST langsung dengan Postman/curl, contohnya menurunkannya jadi 1. Server yang hanya bergantung pada validasi ini akan menyimpan angka palsu tersebut. Maka dari itu, server harus menghitung sendiri total berdasarkan harga produk di database, bukan mengikuti input klien. Intinya: data dari klien tidak boleh dipercaya untuk hal kritikal seperti harga atau total.
   
 
 * **Pranata Putrandana:**
