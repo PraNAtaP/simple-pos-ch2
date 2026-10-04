@@ -10,7 +10,7 @@ Repositori ini digunakan untuk pengerjaan tugas kelompok mata kuliah Pemrograman
   
 
 * **Nafisah Aliyah Khumaini:**
-  
+  Tidak cukup, karena validasi numeric hanya memastikan bahwa nilai total berupa angka, bukan memastikan bahwa nilainya benar. User masih dapat memanipulasi nilai total melalui request. Oleh karena itu, server sebaiknya menghitung ulang total berdasarkan data yang dikirim, seperti harga produk dan jumlah barang, kemudian menggunakan hasil perhitungan server sebagai nilai yang dipercaya.
 
 * **Agnes Titania Kinanti:**
   Tidak, validasi numeric saja belum cukup untuk mencegah manipulasi total transaksi. Validasi tersebut hanya memastikan nilai total yang dikirim berupa angka, tetapi pengguna masih bisa mengubah nilai tersebut sebelum dikirim ke server. Jadi, total transaksi tetap bisa dimanipulasi meskipun sudah divalidasi sebagai angka. Cara yang lebih aman adalah server menghitung ulang total berdasarkan harga produk yang tersimpan di database dan jumlah (qty) yang dikirim. Dengan begitu, total yang disimpan berasal dari perhitungan server dan tidak bergantung pada nilai total dari form.
