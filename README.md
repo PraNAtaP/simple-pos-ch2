@@ -7,6 +7,7 @@ Repositori ini digunakan untuk pengerjaan tugas kelompok mata kuliah Pemrograman
 ### Analisis Keamanan Manipulasi Total Transaksi
 
 * **Dian Paramitha:**
+  Tidak cukup, validasi numeric belum cukup untuk mencegah manipulasi. Dikarenakan validasi numeric hanya memeriksa tipe data, bukan kebenaran nilai jadi hanya memastikan bahwa data yang dikirim berbentuk angka, tidak memverifikasi apakah hasil penjumlahan dari harga barang sudah dikalikan dengan kuantitas. Jadi ada kemungkinan manipulasi nilai total barang/belanja melalui inspect element ataupun postman/cURL ketika nilai dimanipulasi, server akan tetap menganggap data tersebut valid karena nilai yang diinput adalah angka. Jadi untuk menjaga validasi data, input dari form di sisi klien hanya mengirimkan referensi produk dan kuantitas, sedangkan perhitungan subtotal serta total akhir dilakukan mandiri di sisi server dimana harganya diambil langsung dari database.
   
 
 * **Nafisah Aliyah Khumaini:**
