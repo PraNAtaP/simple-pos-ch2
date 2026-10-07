@@ -15,6 +15,9 @@ return Application::configure(basePath: dirname(__DIR__))
             '/pos',
             '/transactions'
         ]);
+        $middleware->alias([
+            'role' => \App\Http\Middleware\EnsureUserHasRole::class,
+        ]);
     })
     ->withExceptions(function (Exceptions $exceptions): void {
         //
