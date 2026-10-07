@@ -23,3 +23,80 @@ Hal tersebut belum cukup untuk mencegah manipulasi total, semua itu disebabkan k
 
 * **Pranata Putrandana:**
   Tidak, hal tersebut sama sekali tidak cukup untuk mencegah manipulasi. Validasi berbasis aturan numeric hanya berfungsi untuk memastikan bahwa format data yang dikirimkan berupa angka, bukan untuk menjamin keabsahan nominalnya.Data yang dikirimkan melalui form atau payload HTTP dari sisi klien sangat rentan direkayasa menggunakan browser developer tools atau alat eksekusi seperti cURL. Oleh karena itu, integritas sistem Point of Sale (POS) harus dijaga dengan cara mengabaikan total kiriman luar dan mewajibkan server untuk menghitung ulang seluruh subtotal serta total transaksi secara mutlak berdasarkan harga referensi yang valid di dalam database.
+
+
+# Skenario Uji Manual — Autentikasi & Otorisasi Pertemuan 7
+
+Bagian ini menjelaskan skenario pengujian manual untuk memastikan autentikasi dan pembatasan peran berjalan sesuai harapan.
+---
+
+### Akun Demo
+
+| Peran | Email | Password |
+|---|---|---|
+| Admin | `admin@pos.test` | `password` |
+| Kasir | `kasir@pos.test` | `password` |
+
+### Skenario 1: Admin Membuka Halaman Produk
+
+1. Buka `/login`
+2. Login dengan `admin@pos.test` / `password`
+3. Buka `/products`
+
+**Hasil yang diharapkan:** Halaman daftar produk tampil normal. Navigasi menampilkan menu Kasir, Transaksi, Produk, dan Kategori.
+![Admin buka /products](docs/screenshots/admin-products.png)
+
+### Skenario 2: Kasir Ditolak Membuka Halaman Produk
+
+1. Buka `/login`
+2. Login dengan `kasir@pos.test` / `password`
+3. Buka `/products`
+
+**Hasil yang diharapkan:** Halaman error 403 dengan pesan "Anda tidak memiliki akses untuk halaman ini." Menu Produk dan Kategori tidak muncul di navigasi.
+![Admin buka /products](docs/screenshots/kasir-403.png)
+
+
+### Skenario 3: Kasir Membuka Halaman Kasir
+
+1. Login sebagai `kasir@pos.test`
+2. Buka `/pos`
+
+**Hasil yang diharapkan:** Halaman kasir tampil normal.
+![Admin buka /products](docs/screenshots/kasir-pos.png)
+
+### Skenario 4: Tamu Membuka Halaman Terlindungi
+
+1. Pastikan belum login
+2. Buka `/products` langsung dari address bar
+
+**Hasil yang diharapkan:** Diarahkan otomatis ke `/login`.
+![Admin buka /products](docs/screenshots/tes-tamu.png)
+![Admin buka /products](docs/screenshots/hasil-tamu.png)
+
+### Skenario 5: Login dengan Kata Sandi Salah
+
+1. Buka `/login`
+2. Isi email `admin@pos.test` dengan kata sandi `salah`
+
+**Hasil yang diharapkan:** Muncul pesan "Email atau kata sandi salah."
+![Admin buka /products](docs/screenshots/login-salah.png)
+
+### Skenario 6: Akun Dinonaktifkan
+
+1. Di tinker: `App\Models\User::where('email', 'kasir@pos.test')->update(['is_active' => false]);`
+2. Login sebagai `kasir@pos.test`
+
+**Hasil yang diharapkan:** Pesan "Akun dinonaktifkan. Hubungi admin."
+![Admin buka /products](docs/screenshots/akun-mati.png)
+
+### Skenario 7: Request JSON Tanpa Login (401 vs 403)
+
+1. Belum login
+2. Jalankan: `curl -i http://127.0.0.1:8000/pos -H "Accept: application/json"`
+
+**Hasil yang diharapkan:** Status `401 Unauthorized`.
+![Admin buka /products](docs/screenshots/curl-401.png)
+
+Perbedaan **401** & **403**:
+- **401** = belum login
+- **403** = sudah login, tapi tidak punya izin
