@@ -59,11 +59,9 @@
             </button>
         </form>
 
-        <p class="mt-6 text-xs text-slate-500">
-            Akun demo: admin@pos.test atau kasir@pos.test,
-            kata sandi <code>password</code>.
+         <p class="mt-6 text-xs text-slate-500">
+            Akun: test@example.com, kata sandi: password
         </p>
-
     </div>
 
 </body>
