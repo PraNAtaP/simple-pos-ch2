@@ -11,10 +11,13 @@ class DatabaseSeeder extends Seeder
 {
     public function run(): void
     {
+        $this->call(DemoUserSeeder::class);
+
         $user = User::factory()->create([
             'name' => 'Test User',
             'email' => 'test@example.com',
         ]);
+
 
         $categoryIds = collect(['Makanan', 'Minuman', 'Snack', 'Lainnya'])
             ->map(fn (string $name) => Category::create(['name' => $name])->id)
