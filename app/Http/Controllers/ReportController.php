@@ -12,6 +12,9 @@ use Illuminate\View\View;
 use Symfony\Component\HttpFoundation\StreamedResponse;
 use Barryvdh\DomPDF\Facade\Pdf;
 use Illuminate\Http\Response;
+use App\Models\Product;
+use Illuminate\Http\RedirectResponse;
+use Illuminate\Support\Facades\Validator;
 
 class ReportController extends Controller
 {
@@ -66,6 +69,56 @@ class ReportController extends Controller
         ]);
 
         return $pdf->download('laporan-penjualan.pdf');
+    }
+
+        public function importForm(): View
+    {
+        return view('reports.import');
+    }
+
+    public function import(Request $request): RedirectResponse
+    {
+        $request->validate([
+            'csv' => ['required', 'file', 'mimes:csv,txt'],
+        ]);
+
+        $file = $request->file('csv');
+        $handle = fopen($file->getRealPath(), 'r');
+        $header = fgetcsv($handle);
+
+        $created = 0;
+        $updated = 0;
+
+        while (($row = fgetcsv($handle)) !== false) {
+            if (count($row) !== count($header)) {
+                continue;
+            }
+
+            $data = array_combine($header, $row);
+
+            $validator = Validator::make($data, [
+                'name' => ['required', 'string'],
+                'category_id' => ['required', 'exists:categories,id'],
+                'price' => ['required', 'integer', 'min:0'],
+            ]);
+
+            if ($validator->fails()) {
+                continue;
+            }
+
+            $validated = $validator->validated();
+
+            $product = Product::updateOrCreate(
+                ['name' => $validated['name'], 'category_id' => $validated['category_id']],
+                ['price' => $validated['price']]
+            );
+
+            $product->wasRecentlyCreated ? $created++ : $updated++;
+        }
+
+        fclose($handle);
+
+        return back()->with('success', "{$created} produk baru, {$updated} diperbarui.");
     }
 
     private function resolveDateRange(Request $request): array
