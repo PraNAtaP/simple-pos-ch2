@@ -3,6 +3,9 @@
 namespace App\Http\Controllers;
 
 use App\Models\Transaction;
+use App\Exports\SalesReportExport;
+use Maatwebsite\Excel\Facades\Excel;
+use Symfony\Component\HttpFoundation\BinaryFileResponse;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\Request;
 use Illuminate\View\View;
@@ -35,6 +38,17 @@ class ReportController extends Controller
             fclose($out);
         }, 'laporan-penjualan.csv');
     }
+
+    public function exportExcel(Request $request): BinaryFileResponse
+    {
+        [$from, $to] = $this->resolveDateRange($request);
+
+        return Excel::download(
+            new SalesReportExport($this->filteredQuery($from, $to)),
+            'laporan-penjualan.xlsx',
+        );
+    }
+    
     private function resolveDateRange(Request $request): array
     {
         $from = $request->date('from')?->startOfDay() ?? now()->startOfMonth();
