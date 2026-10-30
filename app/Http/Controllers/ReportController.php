@@ -10,6 +10,9 @@ use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\Request;
 use Illuminate\View\View;
 use Symfony\Component\HttpFoundation\StreamedResponse;
+use Barryvdh\DomPDF\Facade\Pdf;
+use Illuminate\Http\Response;
+
 class ReportController extends Controller
 {
     public function index(Request $request): View
@@ -24,6 +27,7 @@ class ReportController extends Controller
             'to' => $to->toDateString(),
         ]);
     }
+
     public function exportCsv(Request $request): StreamedResponse
     {
         [$from, $to] = $this->resolveDateRange($request);
@@ -48,7 +52,22 @@ class ReportController extends Controller
             'laporan-penjualan.xlsx',
         );
     }
-    
+
+    public function exportPdf(Request $request): Response
+    {
+        [$from, $to] = $this->resolveDateRange($request);
+
+        $pdf = Pdf::loadView('reports.pdf', [
+            'totalPenjualan' => $this->filteredQuery($from, $to)->sum('total'),
+            'jumlahTransaksi' => $this->filteredQuery($from, $to)->count(),
+            'transactions' => $this->filteredQuery($from, $to)->latest()->limit(50)->get(),
+            'from' => $from->toDateTime(),
+            'to' => $to->toDateTime(),
+        ]);
+
+        return $pdf->download('laporan-penjualan.pdf');
+    }
+
     private function resolveDateRange(Request $request): array
     {
         $from = $request->date('from')?->startOfDay() ?? now()->startOfMonth();
@@ -56,6 +75,7 @@ class ReportController extends Controller
 
         return [$from, $to];
     }
+
     private function filteredQuery($from, $to): Builder
     {
         return Transaction::with('user')
