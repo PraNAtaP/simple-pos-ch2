@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\Transaction;
 use App\Exports\SalesReportExport;
+use App\Jobs\ProcessProductImport;
 use Maatwebsite\Excel\Facades\Excel;
 use Symfony\Component\HttpFoundation\BinaryFileResponse;
 use Illuminate\Database\Eloquent\Builder;
@@ -12,9 +13,7 @@ use Illuminate\View\View;
 use Symfony\Component\HttpFoundation\StreamedResponse;
 use Barryvdh\DomPDF\Facade\Pdf;
 use Illuminate\Http\Response;
-use App\Models\Product;
 use Illuminate\Http\RedirectResponse;
-use Illuminate\Support\Facades\Validator;
 
 class ReportController extends Controller
 {
@@ -64,14 +63,14 @@ class ReportController extends Controller
             'totalPenjualan' => $this->filteredQuery($from, $to)->sum('total'),
             'jumlahTransaksi' => $this->filteredQuery($from, $to)->count(),
             'transactions' => $this->filteredQuery($from, $to)->latest()->limit(50)->get(),
-            'from' => $from->toDateTime(),
-            'to' => $to->toDateTime(),
+            'from' => $from->toDateString(),
+            'to' => $to->toDateString(),
         ]);
 
         return $pdf->download('laporan-penjualan.pdf');
     }
 
-        public function importForm(): View
+    public function importForm(): View
     {
         return view('reports.import');
     }
@@ -82,43 +81,10 @@ class ReportController extends Controller
             'csv' => ['required', 'file', 'mimes:csv,txt'],
         ]);
 
-        $file = $request->file('csv');
-        $handle = fopen($file->getRealPath(), 'r');
-        $header = fgetcsv($handle);
+        $path = $request->file('csv')->store('imports');
+        ProcessProductImport::dispatch($path);
 
-        $created = 0;
-        $updated = 0;
-
-        while (($row = fgetcsv($handle)) !== false) {
-            if (count($row) !== count($header)) {
-                continue;
-            }
-
-            $data = array_combine($header, $row);
-
-            $validator = Validator::make($data, [
-                'name' => ['required', 'string'],
-                'category_id' => ['required', 'exists:categories,id'],
-                'price' => ['required', 'integer', 'min:0'],
-            ]);
-
-            if ($validator->fails()) {
-                continue;
-            }
-
-            $validated = $validator->validated();
-
-            $product = Product::updateOrCreate(
-                ['name' => $validated['name'], 'category_id' => $validated['category_id']],
-                ['price' => $validated['price']]
-            );
-
-            $product->wasRecentlyCreated ? $created++ : $updated++;
-        }
-
-        fclose($handle);
-
-        return back()->with('success', "{$created} produk baru, {$updated} diperbarui.");
+        return back()->with('success', 'Import sedang diproses di background.');
     }
 
     private function resolveDateRange(Request $request): array
