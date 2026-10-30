@@ -1,7 +1,5 @@
 @extends('layouts.app')
-
 @section('title', 'Laporan Penjualan')
-
 @section('content')
     <h1 class="text-lg font-semibold mb-4">Laporan Penjualan</h1>
     <form method="GET" action="{{ route('reports.index') }}" class="flex gap-3 items-end mb-6">
@@ -14,6 +12,7 @@
             <input type="date" name="to" value="{{ $to }}" class="mt-1 block border rounded-md px-3 py-2 text-sm">
         </label>
         <button type="submit" class="bg-slate-900 text-white px-4 py-2 rounded-md text-sm">Filter</button>
+        <a href="{{ route('reports.export.csv', ['from' => $from, 'to' => $to]) }}" class="bg-blue-600 text-white px-4 py-2 rounded-md text-sm">Export CSV</a>
     </form>
     <div class="bg-white border rounded-md p-4 max-w-sm">
         <p class="text-sm text-slate-500">Total Penjualan</p>
@@ -21,4 +20,3 @@
         <p class="text-sm text-slate-500 mt-2">{{ $jumlahTransaksi }} transaksi</p>
     </div>
 @endsection
-
