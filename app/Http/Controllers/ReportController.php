@@ -17,6 +17,7 @@ use Symfony\Component\HttpFoundation\StreamedResponse;
 use Barryvdh\DomPDF\Facade\Pdf;
 use Illuminate\Http\Response;
 use Illuminate\Http\RedirectResponse;
+use App\Models\TransactionDetail;
 
 class ReportController extends Controller
 {
@@ -69,12 +70,23 @@ class ReportController extends Controller
     {
         [$from, $to] = $this->resolveDateRange($request);
 
+        $topProducts = TransactionDetail::whereHas('transaction', function ($query) use ($from, $to) {
+                $query->whereBetween('created_at', [$from, $to]);
+            })
+            ->selectRaw('product_id, SUM(qty) as total_terjual')
+            ->groupBy('product_id')
+            ->orderByDesc('total_terjual')
+            ->limit(5)
+            ->with('product') 
+            ->get();
+
         $pdf = Pdf::loadView('reports.pdf', [
             'totalPenjualan' => $this->filteredQuery($from, $to)->sum('total'),
             'jumlahTransaksi' => $this->filteredQuery($from, $to)->count(),
             'transactions' => $this->filteredQuery($from, $to)->latest()->limit(50)->get(),
-            'from' => $from->toDateString(),
-            'to' => $to->toDateString(),
+            'topProducts' => $topProducts, // <--- Kirim variabel baru ke view
+            'from' => $from->toDateTime(),
+            'to' => $to->toDateTime(),
         ]);
 
         return $pdf->download('laporan-penjualan.pdf');
