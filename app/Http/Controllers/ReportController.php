@@ -7,6 +7,7 @@ use App\Exports\SalesReportExport;
 use App\Jobs\ProcessProductImport;
 use App\Models\ImportError; // Tambahan model error
 use App\Imports\ProductsExcelImport;
+use Illuminate\Support\Facades\Cache;
 use Maatwebsite\Excel\Facades\Excel;
 use Symfony\Component\HttpFoundation\BinaryFileResponse;
 use Illuminate\Database\Eloquent\Builder;
@@ -82,8 +83,9 @@ class ReportController extends Controller
     public function importForm(): View
     {
         $importErrors = ImportError::orderBy('row_number')->get();
+        $importSummary = Cache::get('import_summary');
 
-        return view('reports.import', compact('importErrors'));
+        return view('reports.import', compact('importErrors', 'importSummary'));
     }
 
     // Import manual menggunakan Queue
@@ -94,13 +96,14 @@ class ReportController extends Controller
         ]);
 
         ImportError::truncate();
+        Cache::forget('import_summary');
 
         $path = $request->file('csv')->store('imports');
         ProcessProductImport::dispatch($path);
 
         return back()->with(
             'success',
-            'Import sedang diproses di background. Refresh halaman ini beberapa saat lagi untuk melihat log error (jika ada).'
+            'Import sedang diproses di background. Refresh halaman ini beberapa saat lagi untuk melihat hasil dan log error (jika ada).'
         );
     }
 
@@ -111,14 +114,21 @@ class ReportController extends Controller
             'csv' => ['required', 'file', 'mimes:csv,txt'],
         ]);
 
+        ImportError::truncate();
+        Cache::forget('import_summary');
+
+        $import = new ProductsExcelImport;
         Excel::import(
-            new ProductsExcelImport,
+            $import,
             $request->file('csv')
         );
 
+        $summary = "{$import->created} produk baru, {$import->updated} diperbarui.";
+        Cache::put('import_summary', $summary, now()->addDay());
+
         return back()->with(
             'success',
-            'Import menggunakan Laravel Excel berhasil.'
+            "Import menggunakan Laravel Excel selesai: {$summary}"
         );
     }
 
