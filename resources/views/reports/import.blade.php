@@ -11,6 +11,12 @@
     </div>
 @endif
 
+@if (!empty($importSummary))
+    <div class="bg-blue-50 text-blue-700 p-3 rounded-md mb-4 max-w-md border border-blue-200 text-sm">
+        <span class="font-semibold">Hasil Import Terakhir:</span> {{ $importSummary }}
+    </div>
+@endif
+
 @if ($errors->any())
     <div class="bg-red-50 text-red-700 p-3 rounded-md mb-4 max-w-md border border-red-200">
         @foreach ($errors->all() as $error)
@@ -21,10 +27,10 @@
 
 @if (isset($importErrors) && $importErrors->count() > 0)
     <div class="bg-red-50 text-red-700 p-4 rounded-md mb-4 max-w-md border border-red-200">
-        <h2 class="font-semibold text-sm mb-2">Gagal Di-import (Log Error):</h2>
+        <h2 class="font-semibold text-sm mb-2">Row Gagal Di-import ({{ $importErrors->count() }} baris):</h2>
         <ul class="list-disc pl-5 text-sm space-y-1">
             @foreach ($importErrors as $error)
-                <li>Baris {{ $error->row_number }}: {{ $error->error_message }}</li>
+                <li><strong>Baris {{ $error->row_number }}:</strong> {{ $error->error_message }}</li>
             @endforeach
         </ul>
     </div>
