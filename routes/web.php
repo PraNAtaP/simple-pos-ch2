@@ -24,7 +24,9 @@ Route::post('/logout', [LoginController::class, 'destroy'])
 Route::middleware('auth')->group(function () {
     Route::get('/pos', [TransactionController::class, 'create'])->name('pos.create');
     Route::post('/pos', [TransactionController::class,'store'])->name('transactions.store');
-    Route::get('/transactions', [TransactionController::class,'index'])->name('transactions.index');
+    Route::get('/transactions', [TransactionController::class, 'index'])
+    ->middleware('role:admin,manager')
+    ->name('transactions.index');
     Route::middleware('role:admin')->group(function () {
     Route::resource('categories', CategoryController::class)->except('show');
     Route::resource('products', ProductController::class)->except(['show','destroy']);
@@ -34,5 +36,6 @@ Route::middleware('auth')->group(function () {
     Route::get('/reports/export/pdf', [ReportController::class, 'exportPdf'])->name('reports.export.pdf');
     Route::get('/import', [ReportController::class, 'importForm'])->name('import.create');
     Route::post('/import', [ReportController::class, 'import'])->name('import.store');
+    Route::post('/import/excel', [ReportController::class, 'importExcel'])->name('import.excel');
     });
 });

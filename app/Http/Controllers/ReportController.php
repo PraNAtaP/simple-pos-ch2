@@ -6,6 +6,7 @@ use App\Models\Transaction;
 use App\Exports\SalesReportExport;
 use App\Jobs\ProcessProductImport;
 use App\Models\ImportError; // Tambahan model error
+use App\Imports\ProductsExcelImport;
 use Maatwebsite\Excel\Facades\Excel;
 use Symfony\Component\HttpFoundation\BinaryFileResponse;
 use Illuminate\Database\Eloquent\Builder;
@@ -39,9 +40,16 @@ class ReportController extends Controller
         return response()->streamDownload(function () use ($query) {
             $out = fopen('php://output', 'w');
             fputcsv($out, ['ID', 'Tanggal', 'Kasir', 'Total']);
+
             foreach ($query->lazyById() as $t) {
-                fputcsv($out, [$t->id, $t->created_at, $t->user->name, $t->total]);
+                fputcsv($out, [
+                    $t->id,
+                    $t->created_at,
+                    $t->user->name,
+                    $t->total
+                ]);
             }
+
             fclose($out);
         }, 'laporan-penjualan.csv');
     }
@@ -74,9 +82,11 @@ class ReportController extends Controller
     public function importForm(): View
     {
         $importErrors = ImportError::orderBy('row_number')->get();
+
         return view('reports.import', compact('importErrors'));
     }
 
+    // Import manual menggunakan Queue
     public function import(Request $request): RedirectResponse
     {
         $request->validate([
@@ -88,7 +98,28 @@ class ReportController extends Controller
         $path = $request->file('csv')->store('imports');
         ProcessProductImport::dispatch($path);
 
-        return back()->with('success', 'Import sedang diproses di background. Refresh halaman ini beberapa saat lagi untuk melihat log error (jika ada).');
+        return back()->with(
+            'success',
+            'Import sedang diproses di background. Refresh halaman ini beberapa saat lagi untuk melihat log error (jika ada).'
+        );
+    }
+
+    // Import menggunakan Laravel Excel
+    public function importExcel(Request $request): RedirectResponse
+    {
+        $request->validate([
+            'csv' => ['required', 'file', 'mimes:csv,txt'],
+        ]);
+
+        Excel::import(
+            new ProductsExcelImport,
+            $request->file('csv')
+        );
+
+        return back()->with(
+            'success',
+            'Import menggunakan Laravel Excel berhasil.'
+        );
     }
 
     private function resolveDateRange(Request $request): array
