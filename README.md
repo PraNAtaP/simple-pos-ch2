@@ -100,3 +100,24 @@ Bagian ini menjelaskan skenario pengujian manual untuk memastikan autentikasi da
 Perbedaan **401** & **403**:
 - **401** = belum login
 - **403** = sudah login, tapi tidak punya izin
+
+---
+
+# Analisis Proses Kandidat Queued Job
+
+Selain fitur import produk via CSV (`ProcessProductImport`) yang sudah menggunakan *Queued Job*, proses lain di **Simple POS** yang sangat layak dipindahkan ke *Queued Job* adalah **Export Laporan Penjualan ke PDF dan Excel** (`ReportController::exportPdf` dan `ReportController::exportExcel`), serta **Import Produk via Laravel Excel** (`ReportController::importExcel`).
+
+### Proses yang Dipilih: Export Laporan Penjualan (PDF & Excel)
+
+Saat ini, pembuatan laporan PDF (`Barryvdh\DomPDF`) dan Excel (`Maatwebsite\Excel`) masih dijalankan secara *synchronous* (langsung di dalam siklus HTTP request saat tombol export diklik).
+
+### Alasan Dipindahkan ke Queued Job:
+
+1. **Mencegah HTTP Request Timeout dan Blocking UI**
+   Ketika rentang tanggal laporan mencakup ribuan hingga puluhan ribu data transaksi, proses kueri agregasi database disertai pembentukan tabel HTML dan *rendering* ke PDF/Excel membutuhkan waktu komputasi yang cukup lama. Jika dijalankan secara sinkron, browser pengguna akan terus menunggu (*loading*) dan berisiko gagal akibat melewati batas `max_execution_time` server (HTTP 504/500 Timeout). Dengan *Queued Job*, request dapat langsung merespons pengguna bahwa laporan sedang diproses di *background*.
+
+2. **Menjaga Stabilitas Memori (RAM) Server**
+   Library seperti `DomPDF` dan `PhpSpreadsheet` memuat struktur dokumen dan sel tabel ke dalam memori untuk melakukan kalkulasi tata letak (*layouting*) serta *auto-size* kolom. Jika beberapa admin/pengelola mengunduh laporan berukuran besar secara bersamaan pada *web server process*, konsumsi RAM dapat melonjak drastis (*Out of Memory*) dan mengganggu proses transaksi kasir yang sedang berjalan di halaman POS. Melalui *queue worker*, beban berat ini diisolasi dan dieksekusi secara terkontrol di *background*.
+
+3. **Dukungan Retry Otomatis dan Penanganan Error Lebih Baik**
+   Dengan membungkus proses pembuatan laporan ke dalam *Queued Job* (mengimplementasikan `ShouldQueue` atau `ShouldQueue` bawaan Laravel Excel), sistem dapat memanfaatkan konfigurasi `$tries`, `$backoff`, dan `$timeout`. Apabila terjadi kendala sementara (seperti *database lock* atau beban I/O disk yang tinggi), *job* dapat diulang secara otomatis di *background* tanpa mengharuskan pengguna mengulang permintaan dari awal.
