@@ -3,7 +3,7 @@ info:
   title: Simple POS API
   version: 1.0.0
 paths:
-  /api/login:
+  /api/v1/login:
     post:
       summary: Login dan dapatkan token
       requestBody:
@@ -32,7 +32,7 @@ paths:
                 properties:
                   message: { type: string }
 
-  /api/products:
+  /api/v1/products:
     get:
       summary: Ambil daftar produk
       description: Mengambil daftar produk terpaginasi dengan filter kategori, pencarian nama, dan pengurutan.
@@ -115,11 +115,11 @@ paths:
                       first:
                         type: string
                         nullable: true
-                        example: "http://localhost/api/products?page=1"
+                        example: "http://localhost/api/v1/products?page=1"
                       last:
                         type: string
                         nullable: true
-                        example: "http://localhost/api/products?page=20"
+                        example: "http://localhost/api/v1/products?page=20"
                       prev:
                         type: string
                         nullable: true
@@ -127,7 +127,7 @@ paths:
                       next:
                         type: string
                         nullable: true
-                        example: "http://localhost/api/products?page=2"
+                        example: "http://localhost/api/v1/products?page=2"
                   meta:
                     type: object
                     description: Metadata paginasi
@@ -144,7 +144,7 @@ paths:
                         example: 20
                       path:
                         type: string
-                        example: "http://localhost/api/products"
+                        example: "http://localhost/api/v1/products"
                       per_page:
                         type: integer
                         example: 15
@@ -187,7 +187,7 @@ paths:
                   errors:
                     type: object
 
-  /api/transactions:
+  /api/v1/transactions:
     post:
       summary: Buat transaksi baru
       security:
