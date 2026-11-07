@@ -4,17 +4,36 @@ use App\Models\Product;
 use Illuminate\Foundation\Inspiring;
 use Illuminate\Support\Facades\Artisan;
 use Illuminate\Support\Facades\Http;
+use Illuminate\Support\Facades\Schedule;
 
 Artisan::command('inspire', function () {
     $this->comment(Inspiring::quote());
 })->purpose('Display an inspiring quote');
+
+Schedule::command('model:prune')->daily();
 
 Artisan::command('api:demo', function () {
     $baseUrl = rtrim(config('app.url'), '/') . '/api/v1';
 
     $this->info('=== DEMO SIMPLE POS API V1 ===');
 
-    // 1. Login
+    // --- TUGAS MANDIRI POIN 6 ---
+    $this->warn('0. Uji Coba Sandi Salah');
+    $wrongLogin = Http::acceptJson()->post($baseUrl . '/login', [
+        'email' => 'kasir@pos.test',
+        'password' => 'sandi-ngawur-prana', // Sengaja disalahin
+    ]);
+
+    $this->line('Login Gagal: HTTP ' . $wrongLogin->status());
+
+    // Skrip akan dicegat di sini karena gagal login
+    if (! $wrongLogin->successful() || ! $wrongLogin->json('token')) {
+        $this->error('Sistem berhenti: Login ditolak dengan pesan "' . $wrongLogin->json('message') . '".');
+        $this->comment('Sesuai instruksi Poin 6, skrip berhenti di sini alih-alih lanjut pakai token kosong.');
+        return; // Hentikan eksekusi secara paksa
+    }
+
+    // 1. Login Normal 
     $login = Http::acceptJson()->post($baseUrl . '/login', [
         'email' => 'kasir@pos.test',
         'password' => 'password',
